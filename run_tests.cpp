@@ -93,7 +93,8 @@ void test1() {
 
 
 int main(int argc, char const *argv[]) {
-    test1();
+    //test1();
+    test_LL1Parser();
     return 0;
 }
 

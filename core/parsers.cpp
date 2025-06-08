@@ -284,13 +284,13 @@ private:
 
 
 /**
- * Clase que implementa un parser LL(1)
+ * Clase que implementa el parser LL(1)
  */
 class LL1Parser {
 private:
     Grammar G;
-    // Tabla de parsing: M[NonTerminal][Terminal] -> Production
-    unordered_map<Symbol, unordered_map<Symbol, Production>> M;
+    // Tabla de parsing: TABLE[NonTerminal][Terminal] -> Production
+    unordered_map<Symbol, unordered_map<Symbol, Production>> TABLE;
     unordered_map<Symbol, ContainerSet> firsts;
     unordered_map<Symbol, ContainerSet> follows;
     Symbol EOF_SYMBOL;
@@ -303,44 +303,44 @@ private:
         firsts = computeFirsts(G);
         follows = computeFollows(G, firsts);
         
-        // Inicializar tabla vacía
-        M.clear();
+        // Inicializar tabla vacia
+        TABLE.clear();
         
-        // Para cada producción A -> α
+        // Para cada produccion A -> α
         for (const Production& production : G.getProductions()) {
-            const Symbol& A = production.getLeft();
-            const Sentence& alpha = production.getRight();
+             const Symbol& A = production.getLeft();
+             const Sentence& alpha = production.getRight();
             
-            // Calcular conjunto de predicción para esta producción
+            // Calcular conjunto de prediccion para la produccion
             ContainerSet prediction_set = computePredictionSet(production);
             
             // Para cada terminal a en Pred(A -> α)
             for (const Symbol& terminal : prediction_set.getSymbols()) {
                 // Verificar si ya existe una entrada en M[A, a]
-                if (M[A].find(terminal) != M[A].end()) {
-                    throw runtime_error("La gramática no es LL(1): conflicto en M[" + 
-                                      A.getName() + ", " + terminal.getName() + "]");
+                if (TABLE[A].find(terminal) != TABLE[A].end()) {
+                    throw runtime_error("La gramatica no es LL(1): conflicto en TABLE[" + 
+                                        A.getName() + ", " + terminal.getName() + "]");
                 }
-                M[A][terminal] = production;
+                TABLE[A][terminal] = production;
             }
             
-            // Si epsilon está en el conjunto de predicción
+            // Si epsilon está en el conjunto de prediccion
             if (prediction_set.containsEpsilon()) {
-                // Para cada símbolo en Follow(A)
+                // Para cada simbolo en Follow(A)
                 const ContainerSet& follow_A = follows[A];
                 for (const Symbol& follow_symbol : follow_A.getSymbols()) {
-                    if (M[A].find(follow_symbol) != M[A].end()) {
-                        throw runtime_error("La gramática no es LL(1): conflicto en M[" + 
-                                          A.getName() + ", " + follow_symbol.getName() + "]");
+                    if (TABLE[A].find(follow_symbol) != TABLE[A].end()) {
+                        throw runtime_error("La gramatica no es LL(1): conflicto en TABLE[" + 
+                                            A.getName() + ", " + follow_symbol.getName() + "]");
                     }
-                    M[A][follow_symbol] = production;
+                    TABLE[A][follow_symbol] = production;
                 }
             }
         }
     }
     
     /**
-     * Calcula el conjunto de predicción para una producción A -> α
+     * Calcula el conjunto de prediccion para una produccion A -> α
      */
     ContainerSet computePredictionSet(const Production& production) {
         const Symbol& A = production.getLeft();
@@ -393,7 +393,7 @@ public:
             
             // Verificar bounds del cursor
             if (cursor >= input.size()) {
-                throw runtime_error("Entrada insuficiente durante el análisis");
+                throw runtime_error("Entrada insuficiente durante el analisis");
             }
             
             Symbol current_input = input[cursor];
@@ -411,20 +411,20 @@ public:
                     }
                     cursor++;
                 } else {
-                    throw runtime_error("Error sintáctico: esperado '" + top.getName() + 
+                    throw runtime_error("Error sintactico: esperado '" + top.getName() + 
                                       "', encontrado '" + current_input.getName() + "'");
                 }
             }
             else {
                 // Top es no terminal
-                auto it_A = M.find(top);
-                if (it_A == M.end()) {
+                auto it_A = TABLE.find(top);
+                if (it_A == TABLE.end()) {
                     throw runtime_error("No terminal no encontrado en tabla: " + top.getName());
                 }
                 
                 auto it_prod = it_A->second.find(current_input);
                 if (it_prod == it_A->second.end()) {
-                    throw runtime_error("Error sintáctico: no hay entrada en M[" + 
+                    throw runtime_error("Error sintactico: no hay entrada en TABLE[" + 
                                       top.getName() + ", " + current_input.getName() + "]");
                 }
                 
@@ -449,14 +449,14 @@ public:
      * Imprime la tabla de análisis LL(1)
      */
     void printParsingTable() const {
-        cout << "\n=== TABLA DE ANÁLISIS LL(1) ===\n";
+        cout << "\n=== TABLA DE ANALISIS LL(1) ===\n";
         
         // Obtener todos los terminales para las columnas
         unordered_set<Symbol> all_terminals = G.getTerminals();
         all_terminals.insert(EOF_SYMBOL);
         
         // Imprimir encabezados
-        cout << setw(12) << "M[A,a]";
+        cout << setw(12) << "TABLE[A,a]";
         for (const Symbol& terminal : all_terminals) {
             cout << setw(15) << terminal.getName();
         }
@@ -467,8 +467,8 @@ public:
             cout << setw(12) << nonTerminal.getName();
             
             for (const Symbol& terminal : all_terminals) {
-                auto it_A = M.find(nonTerminal);
-                if (it_A != M.end()) {
+                auto it_A = TABLE.find(nonTerminal);
+                if (it_A != TABLE.end()) {
                     auto it_prod = it_A->second.find(terminal);
                     if (it_prod != it_A->second.end()) {
                         string prod_str = it_prod->second.toString();
@@ -510,39 +510,37 @@ public:
     }
 };
 
-/**
- * Función auxiliar para crear una cadena de entrada desde un string
- */
-vector<Symbol> createInputString(const string& input, const Grammar& G) {
-    vector<Symbol> result;
-    
-    // Tokenizar la entrada (simplificado - asume tokens separados por espacios)
-    stringstream ss(input);
-    string token;
-    
-    while (ss >> token) {
-        // Buscar el símbolo en los terminales de la gramática
-        bool found = false;
-        for (const Symbol& terminal : G.getTerminals()) {
-            if (terminal.getName() == token) {
-                result.push_back(terminal);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            throw runtime_error("Terminal no reconocido: " + token);
-        }
-    }
-    
-    // Añadir símbolo EOF
-    result.push_back(Symbol("$", true));
-    
-    return result;
-}
 
-// Ejemplo de uso
-void demonstrateLL1Parser() {
+
+
+
+
+
+
+
+
+
+
+
+/*
+TODO ShiftReduce-Parser
+*/
+
+/*
+TODO SLR1-Parser(ShiftReduce-Parser)
+*/
+
+
+
+
+
+
+
+
+
+// TEST  
+// LL1 Parser
+void test_LL1Parser() {
     // Ejemplo de gramática simple: E -> E + T | T, T -> T * F | F, F -> ( E ) | id
     
     // Definir símbolos terminales
@@ -587,12 +585,20 @@ void demonstrateLL1Parser() {
         cout << "Gramática creada exitosamente.\n";
         parser.printParsingTable();
         
-        // Probar análisis con entrada "id + id * id"
+        // Probar análisis con entrada "id * id * id + id * id + id + id $"
         vector<Symbol> input = {
+            Symbol("id", true),
+            Symbol("*", true),
+            Symbol("id", true),
+            Symbol("*", true),
             Symbol("id", true),
             Symbol("+", true),
             Symbol("id", true),
             Symbol("*", true),
+            Symbol("id", true),
+            Symbol("+", true),
+            Symbol("id", true),
+            Symbol("+", true),
             Symbol("id", true),
             Symbol("$", true)
         };
@@ -604,22 +610,3 @@ void demonstrateLL1Parser() {
         cout << "Error: " << e.what() << endl;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-TODO ShiftReduce-Parser
-*/
-
-/*
-TODO SLR1-Parser(ShiftReduce-Parser)
-*/

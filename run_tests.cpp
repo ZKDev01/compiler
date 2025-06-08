@@ -31,6 +31,9 @@ vector<pair<string, string>> load_tests() {
 
 
 
+
+
+
 void test1() {
     // Definir simbolos terminales
     Symbol plus("+", true);
@@ -91,10 +94,20 @@ void test1() {
 }
 
 
+// TODO : falta gramatica
+
+LL1Parser parser (Grammar& G) {
+    LL1Parser _parser(G);
+    return _parser;
+}
+
+
 
 int main(int argc, char const *argv[]) {
     //test1();
-    test_LL1Parser();
+    //test_LL1Parser();
+    // _parser = parser(G);
+    // _parser.parse(tokenizer_result);
     return 0;
 }
 

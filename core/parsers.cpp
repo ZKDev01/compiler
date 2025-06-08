@@ -541,9 +541,14 @@ TODO SLR1-Parser(ShiftReduce-Parser)
 // TEST  
 // LL1 Parser
 void test_LL1Parser() {
-    // Ejemplo de gramática simple: E -> E + T | T, T -> T * F | F, F -> ( E ) | id
+    // Ejemplo de gramática simple:
+    /**
+     * E -> E + T | T 
+     * T -> T * F | F 
+     * F -> ( E ) | id
+    */
     
-    // Definir símbolos terminales
+    // Definir simbolos terminales
     unordered_set<Symbol> terminals = {
         Symbol("+", true),
         Symbol("*", true), 
@@ -552,14 +557,14 @@ void test_LL1Parser() {
         Symbol("id", true)
     };
     
-    // Definir símbolos no terminales
+    // Definir simbolos no terminales
     unordered_set<Symbol> nonTerminals = {
         Symbol("E", false),
         Symbol("T", false),
         Symbol("F", false)
     };
     
-    // Definir producciones (gramática LL(1) equivalente)
+    // Definir producciones 
     vector<Production> productions = {
         Production(Symbol("E", false), Sentence({Symbol("T", false), Symbol("E'", false)})),
         Production(Symbol("E'", false), Sentence({Symbol("+", true), Symbol("T", false), Symbol("E'", false)})),
@@ -579,13 +584,10 @@ void test_LL1Parser() {
     Grammar grammar(terminals, nonTerminals, Symbol("E", false), productions);
     
     try {
-        // Crear parser
         LL1Parser parser(grammar);
-        
-        cout << "Gramática creada exitosamente.\n";
         parser.printParsingTable();
         
-        // Probar análisis con entrada "id * id * id + id * id + id + id $"
+        // Probar analisis con entrada "id * id * id + id * id + id + id $"
         vector<Symbol> input = {
             Symbol("id", true),
             Symbol("*", true),

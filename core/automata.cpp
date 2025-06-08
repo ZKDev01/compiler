@@ -9,6 +9,8 @@
 
 using namespace std;
 
+
+
 class AFND {
     public:
         struct Pair_Hash {
@@ -291,103 +293,3 @@ function CLOSURE
 function MINIMIZATION
 */
 
-
-
-
-
-void test1() {
-    try {
-        unordered_set<int> finals = {1, 2};
-        AFND::Pair_Hash pair_hash;
-        
-        unordered_map<pair<int,char>, vector<int>, AFND::Pair_Hash> transitions;
-        transitions[{0, 'a'}] = {1};
-        transitions[{1, 'b'}] = {2};
-        transitions[{2, 'c'}] = {0};
-
-        AFND automata(3, finals, transitions);
-        automata.print();
-
-        vector<string> test_words = {"abc", "ab", "a", "ac", "bca"};
-        for (const string& word : test_words) {
-            cout << "Reconociendo la palabra '" << word << "': ";
-            if (automata.recognize(word)) {
-                cout << "Aceptada" << endl;
-            } else {
-                cout << "No aceptada" << endl;
-            }
-        }
-        
-    } catch (const invalid_argument& e) {
-        cerr << "Error: " << e.what() << endl;
-    }
-}
-
-void test2() {
-    try {
-        unordered_set<int> finals = {2};
-        unordered_map<pair<int,char>, vector<int>, AFND::Pair_Hash> transitions;
-
-        transitions[{0, 'a'}] = {1};
-        transitions[{0, 'b'}] = {0};
-        transitions[{1, '\0'}] = {2};
-        transitions[{2, 'a'}] = {2};
-        transitions[{2, 'b'}] = {2};
-
-        AFND automata(3, finals, transitions);
-
-        automata.print();
-
-        vector<string> test_words = {"", "b", "bb", "ab", "bbab", "aba", "ba"};
-        for (const string& word : test_words) {
-            cout << "Reconociendo la palabra '" << word << "': ";
-            if (automata.recognize(word)) {
-                cout << "Aceptada" << endl;
-            } else {
-                cout << "No aceptada" << endl;
-            }
-        }
-        
-    } catch (const invalid_argument& e) {
-        cerr << "Error: " << e.what() << endl;
-    }
-}
-
-void test3() {
-    // L = { ab^n | n = 2k+1 para k >= 0 }
-    try {
-        unordered_set<int> finals = {2};
-        unordered_map<pair<int,char>, vector<int>, AFND::Pair_Hash> transitions;
-
-        transitions[ {0,'a'} ] = {1};
-        transitions[ {0,'b'} ] = {0};
-        transitions[ {1,'a'} ] = {1};
-        transitions[ {1,'b'} ] = {2};
-        transitions[ {2,'b'} ] = {1};
-        
-        AFD automata(3, finals, transitions);
-
-        automata.print();
-
-        vector<string> test_words = {"", "a", "ab", "abb", "abbb", "abab", "ababb"};
-        for (const string& word : test_words) {
-            cout << "Reconociendo la palabra '" << word << "': ";
-            if (automata.recognize(word)) {
-                cout << "Aceptada" << endl;
-            } else {
-                cout << "No aceptada" << endl;
-            }
-        }
-        
-    } catch (const invalid_argument& e) {
-        cerr << "Error: " << e.what() << endl;
-    }
-}
-
-
-int main(int argc, char const *argv[]) {
-    //test1();
-    //test2();
-    test3();
-    return 0;
-}
